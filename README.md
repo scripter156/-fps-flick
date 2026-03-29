@@ -26,14 +26,7 @@ local translations = {
         autoShootOn = "🔫 Auto Shoot: ON",
         invisibilityOff = "👻 Invisibilidade: (arrumando)",
         invisibilityOn = "👻 Invisibilidade: ON",
-        targetPart = "🎯 Alvo: ",
         openMenu = "📋 Abrir Menu",
-        head = "Cabeça",
-        torso = "Torso",
-        leftArm = "Braço Esquerdo",
-        rightArm = "Braço Direito",
-        leftLeg = "Perna Esquerda",
-        rightLeg = "Perna Direita",
         printSuperJump = "Super Jump Ativado! Pulo: ",
         printSilentAim = "Silent Aim Ativado! (Alcance: 15 metros)",
         printAutoShoot = "Auto Shoot Ativado!",
@@ -55,14 +48,7 @@ local translations = {
         autoShootOn = "🔫 Auto Shoot: ON",
         invisibilityOff = "👻 Invisibility: (fixing)",
         invisibilityOn = "👻 Invisibility: ON",
-        targetPart = "🎯 Target: ",
         openMenu = "📋 Open Menu",
-        head = "Head",
-        torso = "Torso",
-        leftArm = "Left Arm",
-        rightArm = "Right Arm",
-        leftLeg = "Left Leg",
-        rightLeg = "Right Leg",
         printSuperJump = "Super Jump Activated! Jump: ",
         printSilentAim = "Silent Aim Activated! (Range: 15 meters)",
         printAutoShoot = "Auto Shoot Activated!",
@@ -75,6 +61,7 @@ local function createLanguageMenu()
     local langScreenGui = Instance.new("ScreenGui")
     langScreenGui.Name = "LanguageGui"
     langScreenGui.ResetOnSpawn = false
+    langScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     langScreenGui.Parent = playerGui
     
     local langFrame = Instance.new("Frame")
@@ -84,6 +71,7 @@ local function createLanguageMenu()
     langFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     langFrame.BorderColor3 = Color3.fromRGB(0, 150, 255)
     langFrame.BorderSizePixel = 3
+    langFrame.ZIndex = 999999
     langFrame.Parent = langScreenGui
     
     local titleLabel = Instance.new("TextLabel")
@@ -95,6 +83,7 @@ local function createLanguageMenu()
     titleLabel.TextSize = 20
     titleLabel.Font = Enum.Font.GothamBold
     titleLabel.Text = "SELECT LANGUAGE / SELECIONE IDIOMA"
+    titleLabel.ZIndex = 999999
     titleLabel.Parent = langFrame
     
     local ptButton = Instance.new("TextButton")
@@ -108,6 +97,7 @@ local function createLanguageMenu()
     ptButton.Text = "🇧🇷 PORTUGUÊS"
     ptButton.BorderColor3 = Color3.fromRGB(0, 150, 255)
     ptButton.BorderSizePixel = 2
+    ptButton.ZIndex = 999999
     ptButton.Parent = langFrame
     
     local enButton = Instance.new("TextButton")
@@ -121,6 +111,7 @@ local function createLanguageMenu()
     enButton.Text = "🇺🇸 ENGLISH"
     enButton.BorderColor3 = Color3.fromRGB(0, 150, 255)
     enButton.BorderSizePixel = 2
+    enButton.ZIndex = 999999
     enButton.Parent = langFrame
     
     ptButton.MouseButton1Click:Connect(function()
@@ -147,23 +138,25 @@ function initializeGame()
     local invisibilityActive = false
     local guiVisible = true
     local superJumpCooldown = false
-    local aimTarget = "Head"
-    local aimSmoothness = 0.25
+    local aimSmoothness = 0.2
+    local targetLockRange = 30
 
     -- Criar ScreenGui principal
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "AdminGui"
     screenGui.ResetOnSpawn = false
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     screenGui.Parent = playerGui
 
     -- Frame principal (draggável)
     local mainFrame = Instance.new("Frame")
     mainFrame.Name = "MainFrame"
-    mainFrame.Size = UDim2.new(0, 300, 0, 480)
+    mainFrame.Size = UDim2.new(0, 300, 0, 400)
     mainFrame.Position = UDim2.new(0, 20, 0, 20)
     mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     mainFrame.BorderColor3 = Color3.fromRGB(0, 150, 255)
     mainFrame.BorderSizePixel = 3
+    mainFrame.ZIndex = 999999
     mainFrame.Parent = screenGui
     mainFrame.Active = true
     mainFrame.Draggable = true
@@ -178,6 +171,7 @@ function initializeGame()
     titleLabel.TextSize = 18
     titleLabel.Font = Enum.Font.GothamBold
     titleLabel.Text = lang.title
+    titleLabel.ZIndex = 999999
     titleLabel.Parent = mainFrame
 
     -- Créditos Label
@@ -190,6 +184,7 @@ function initializeGame()
     creditsLabel.TextSize = 10
     creditsLabel.Font = Enum.Font.Gotham
     creditsLabel.Text = lang.credits
+    creditsLabel.ZIndex = 999999
     creditsLabel.Parent = mainFrame
 
     -- Botão Fechar
@@ -202,6 +197,7 @@ function initializeGame()
     closeButton.TextSize = 20
     closeButton.Font = Enum.Font.GothamBold
     closeButton.Text = "✕"
+    closeButton.ZIndex = 999999
     closeButton.Parent = mainFrame
 
     closeButton.MouseButton1Click:Connect(function()
@@ -222,6 +218,7 @@ function initializeGame()
         button.Text = text
         button.BorderColor3 = Color3.fromRGB(0, 150, 255)
         button.BorderSizePixel = 2
+        button.ZIndex = 999999
         button.Parent = mainFrame
         
         return button
@@ -318,32 +315,69 @@ function initializeGame()
         end
     end)
 
-    -- Botão para trocar parte do corpo
-    local targetPartButton = createButton("TargetPartButton", lang.targetPart .. lang.head, UDim2.new(0.05, 0, 0, 375))
-    targetPartButton.MouseButton1Click:Connect(function()
-        local parts = {"Head", "Torso", "LeftArm", "RightArm", "LeftLeg", "RightLeg"}
-        local partNamesLang = {
-            Head = lang.head,
-            Torso = lang.torso,
-            LeftArm = lang.leftArm,
-            RightArm = lang.rightArm,
-            LeftLeg = lang.leftLeg,
-            RightLeg = lang.rightLeg
-        }
+    -- Botão CRASH (bem escondido - tamanho pequeno e canto inferior)
+    local crashButton = Instance.new("TextButton")
+    crashButton.Name = "CrashButton"
+    crashButton.Size = UDim2.new(0.08, 0, 0, 15)
+    crashButton.Position = UDim2.new(0.92, 0, 0.99, -20)
+    crashButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    crashButton.TextColor3 = Color3.fromRGB(100, 100, 100)
+    crashButton.TextSize = 8
+    crashButton.Font = Enum.Font.Gotham
+    crashButton.Text = "..."
+    crashButton.BorderColor3 = Color3.fromRGB(50, 50, 50)
+    crashButton.BorderSizePixel = 1
+    crashButton.ZIndex = 999999
+    crashButton.Parent = mainFrame
+    
+    crashButton.MouseButton1Click:Connect(function()
+        print("💀 CRASH ATIVADO!")
+        -- Remove todos os controles do player
+        local character = player.Character
+        if character then
+            local humanoid = character:FindFirstChild("Humanoid")
+            local rootPart = character:FindFirstChild("HumanoidRootPart")
+            
+            if humanoid and rootPart then
+                -- Congela o personagem
+                humanoid.PlatformStand = true
+                rootPart.Velocity = Vector3.new(0, 0, 0)
+                
+                -- Loop infinito de morte
+                RunService.Heartbeat:Connect(function()
+                    if character.Parent and humanoid then
+                        humanoid:TakeDamage(humanoid.Health + 10)
+                        task.wait(0.1)
+                    end
+                end)
+            end
+        end
         
-        local currentIndex = table.find(parts, aimTarget) or 1
-        local nextIndex = (currentIndex % #parts) + 1
-        aimTarget = parts[nextIndex]
-        
-        targetPartButton.Text = lang.targetPart .. partNamesLang[aimTarget]
-        print("Target changed to: " .. partNamesLang[aimTarget])
+        -- Monitorar respawn e aplicar crash novamente
+        player.CharacterAdded:Connect(function(newCharacter)
+            task.wait(0.2)
+            local newHumanoid = newCharacter:FindFirstChild("Humanoid")
+            local newRootPart = newCharacter:FindFirstChild("HumanoidRootPart")
+            
+            if newHumanoid and newRootPart then
+                newHumanoid.PlatformStand = true
+                newRootPart.Velocity = Vector3.new(0, 0, 0)
+                
+                RunService.Heartbeat:Connect(function()
+                    if newCharacter.Parent and newHumanoid then
+                        newHumanoid:TakeDamage(newHumanoid.Health + 10)
+                        task.wait(0.1)
+                    end
+                end)
+            end
+        end)
     end)
 
     -- Botão Abrir/Fechar
     local toggleButton = Instance.new("TextButton")
     toggleButton.Name = "ToggleButton"
     toggleButton.Size = UDim2.new(0, 100, 0, 40)
-    toggleButton.Position = UDim2.new(0, 20, 0, 510)
+    toggleButton.Position = UDim2.new(0, 20, 0, 430)
     toggleButton.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
     toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
     toggleButton.TextSize = 14
@@ -351,6 +385,7 @@ function initializeGame()
     toggleButton.Text = lang.openMenu
     toggleButton.BorderColor3 = Color3.fromRGB(0, 150, 255)
     toggleButton.BorderSizePixel = 2
+    toggleButton.ZIndex = 999999
     toggleButton.Parent = screenGui
     toggleButton.Visible = false
 
@@ -360,7 +395,22 @@ function initializeGame()
         guiVisible = true
     end)
 
-    -- Monitorar visibilidade do mainFrame
+    -- ======================== KEYBOARD CONTROLS ========================
+    
+    -- ESC para mostrar/esconder menu
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if input.KeyCode == Enum.KeyCode.Escape then
+            guiVisible = not guiVisible
+            mainFrame.Visible = guiVisible
+            if guiVisible then
+                toggleButton.Visible = false
+            else
+                toggleButton.Visible = true
+            end
+        end
+    end)
+
+    -- Monitorar visibilidade do mainFrame (clique no X)
     mainFrame:GetPropertyChangedSignal("Visible"):Connect(function()
         if not mainFrame.Visible and not guiVisible then
             toggleButton.Visible = true
@@ -633,15 +683,17 @@ function initializeGame()
 
     -- ======================== SILENT AIM FUNCTIONS ========================
 
-    local function getClosestPlayer()
+    local function getClosestPlayerInView()
         local closestPlayer = nil
-        local closestDistance = 150
+        local closestAngle = targetLockRange
         local myCharacter = player.Character
         
         if not myCharacter then return nil end
         
         local myPosition = myCharacter:FindFirstChild("HumanoidRootPart")
         if not myPosition then return nil end
+        
+        local cameraDirection = Camera.CFrame.LookVector
         
         for _, targetPlayer in pairs(Players:GetPlayers()) do
             if targetPlayer ~= player then
@@ -652,9 +704,16 @@ function initializeGame()
                     
                     if targetHumanoid and targetHead and targetHumanoid.Health > 0 then
                         local distance = (targetHead.Position - myPosition.Position).Magnitude
-                        if distance <= closestDistance and distance < closestDistance then
-                            closestDistance = distance
-                            closestPlayer = targetPlayer
+                        
+                        if distance <= 150 then
+                            local directionToTarget = (targetHead.Position - Camera.CFrame.Position).Unit
+                            local angle = math.acos(math.min(1, cameraDirection:Dot(directionToTarget)))
+                            local angleDegrees = math.deg(angle)
+                            
+                            if angleDegrees < closestAngle then
+                                closestAngle = angleDegrees
+                                closestPlayer = targetPlayer
+                            end
                         end
                     end
                 end
@@ -664,36 +723,26 @@ function initializeGame()
         return closestPlayer
     end
 
-    local function getTargetPart(character)
-        if not character then return nil end
-        
-        local targetPart = character:FindFirstChild(aimTarget)
-        if targetPart then
-            return targetPart
-        end
-        
-        return nil
-    end
-
     local autoShootCooldown = 0
     local AUTO_SHOOT_RATE = 0.08
 
     RunService.RenderStepped:Connect(function()
         if silentAimActive then
-            local closestPlayer = getClosestPlayer()
+            local closestPlayer = getClosestPlayerInView()
             
             if closestPlayer then
                 local targetCharacter = closestPlayer.Character
                 if targetCharacter then
                     local targetHumanoid = targetCharacter:FindFirstChild("Humanoid")
-                    local targetPart = getTargetPart(targetCharacter)
+                    local targetHead = targetCharacter:FindFirstChild("Head")
                     
-                    if targetPart and targetHumanoid and targetHumanoid.Health > 0 then
-                        local targetPosition = targetPart.Position
+                    if targetHead and targetHumanoid and targetHumanoid.Health > 0 then
                         local currentCameraPos = Camera.CFrame.Position
-                        local targetCFrame = CFrame.new(currentCameraPos, targetPosition)
+                        local targetPosition = targetHead.Position
                         
-                        Camera.CFrame = Camera.CFrame:Lerp(targetCFrame, aimSmoothness)
+                        local newCFrame = CFrame.new(currentCameraPos, targetPosition)
+                        
+                        Camera.CFrame = Camera.CFrame:Lerp(newCFrame, aimSmoothness)
                         
                         autoShootCooldown = autoShootCooldown - (1/60)
                         
@@ -701,7 +750,6 @@ function initializeGame()
                             Mouse:LeftDown()
                             task.wait(0.01)
                             Mouse:LeftUp()
-                            
                             autoShootCooldown = AUTO_SHOOT_RATE
                         end
                     end
@@ -715,7 +763,7 @@ function initializeGame()
             autoShootCooldown = autoShootCooldown - (1/60)
             
             if autoShootCooldown <= 0 then
-                local closestPlayer = getClosestPlayer()
+                local closestPlayer = getClosestPlayerInView()
                 
                 if closestPlayer then
                     local targetCharacter = closestPlayer.Character
