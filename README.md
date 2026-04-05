@@ -32,9 +32,9 @@ local translations = {
         speedOn = "⚡ Speed: ON",
         openMenu = "📋 Abrir Menu",
         selectSpeed = "Digite a Velocidade (10-500)",
-        selectFlySpeed = "Digite a Velocidade do Fly (10-500)",
+        selectFlySpeed = "Digite a Velocidade do Fly (10-10000)",
         printSuperJump = "Super Jump Ativado!",
-        printSilentAim = "Silent Aim Ativado! (Alcance: 15 metros)",
+        printSilentAim = "Silent Aim Ativado! (Mova o mouse para ajustar)",
         printAutoShoot = "Auto Shoot Ativado!",
         printInvisibility = "Invisibilidade Ativada!",
         printFly = "Fly Ativado! (WASD para mover, Espaço para cima, Shift para baixo)",
@@ -62,9 +62,9 @@ local translations = {
         speedOn = "⚡ Speed: ON",
         openMenu = "📋 Open Menu",
         selectSpeed = "Enter Speed (10-500)",
-        selectFlySpeed = "Enter Fly Speed (10-500)",
+        selectFlySpeed = "Enter Fly Speed (10-10000)",
         printSuperJump = "Super Jump Activated!",
-        printSilentAim = "Silent Aim Activated! (Range: 15 meters)",
+        printSilentAim = "Silent Aim Activated! (Move mouse to adjust)",
         printAutoShoot = "Auto Shoot Activated!",
         printInvisibility = "Invisibility Activated!",
         printFly = "Fly Activated! (WASD to move, Space to go up, Shift to go down)",
@@ -152,9 +152,8 @@ function initializeGame()
     local silentAimActive = false
     local autoShootActive = false
     local invisibilityActive = false
-    local guiVisible = true
     local superJumpCooldown = false
-    local aimSmoothness = 0.2
+    local aimSmoothness = 0.15
     local targetLockRange = 30
     
     -- Variáveis Globais para Fly
@@ -188,7 +187,7 @@ function initializeGame()
     -- Frame principal (draggável)
     local mainFrame = Instance.new("Frame")
     mainFrame.Name = "MainFrame"
-    mainFrame.Size = UDim2.new(0, 300, 0, 500)
+    mainFrame.Size = UDim2.new(0, 300, 0, 470)
     mainFrame.Position = UDim2.new(0, 20, 0, 20)
     mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     mainFrame.BorderColor3 = Color3.fromRGB(0, 150, 255)
@@ -223,24 +222,6 @@ function initializeGame()
     creditsLabel.Text = lang.credits
     creditsLabel.ZIndex = 999999
     creditsLabel.Parent = mainFrame
-
-    -- Botão Fechar
-    local closeButton = Instance.new("TextButton")
-    closeButton.Name = "CloseButton"
-    closeButton.Size = UDim2.new(0, 30, 0, 30)
-    closeButton.Position = UDim2.new(1, -35, 0, 5)
-    closeButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-    closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    closeButton.TextSize = 20
-    closeButton.Font = Enum.Font.GothamBold
-    closeButton.Text = "✕"
-    closeButton.ZIndex = 999999
-    closeButton.Parent = mainFrame
-
-    closeButton.MouseButton1Click:Connect(function()
-        mainFrame.Visible = false
-        guiVisible = false
-    end)
 
     -- Função para criar botão
     local function createButton(name, text, position)
@@ -441,28 +422,6 @@ function initializeGame()
         end)
     end)
 
-    -- Botão Abrir/Fechar
-    local toggleButton = Instance.new("TextButton")
-    toggleButton.Name = "ToggleButton"
-    toggleButton.Size = UDim2.new(0, 100, 0, 40)
-    toggleButton.Position = UDim2.new(0, 20, 0, 530)
-    toggleButton.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
-    toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    toggleButton.TextSize = 14
-    toggleButton.Font = Enum.Font.GothamBold
-    toggleButton.Text = lang.openMenu
-    toggleButton.BorderColor3 = Color3.fromRGB(0, 150, 255)
-    toggleButton.BorderSizePixel = 2
-    toggleButton.ZIndex = 999999
-    toggleButton.Parent = screenGui
-    toggleButton.Visible = false
-
-    toggleButton.MouseButton1Click:Connect(function()
-        mainFrame.Visible = true
-        toggleButton.Visible = false
-        guiVisible = true
-    end)
-
     -- ======================== MENU DE VELOCIDADE COM INPUT ========================
     
     function openSpeedMenu()
@@ -529,7 +488,7 @@ function initializeGame()
                 if inputValue >= 10 and inputValue <= 500 then
                     walkSpeed = inputValue
                     updateWalkSpeed()
-                    print("✅ Velocidade aplicada: " .. inputValue)
+                    print("✅ Velocidade: " .. inputValue)
                     speedGui:Destroy()
                 else
                     inputBox.PlaceholderText = "Mín: 10, Máx: 500"
@@ -642,18 +601,6 @@ function initializeGame()
     -- ======================== KEYBOARD CONTROLS ========================
     
     UserInputService.InputBegan:Connect(function(input, gameProcessed)
-        if input.KeyCode == Enum.KeyCode.Escape then
-            guiVisible = not guiVisible
-            mainFrame.Visible = guiVisible
-            if guiVisible then
-                toggleButton.Visible = false
-            else
-                toggleButton.Visible = true
-            end
-        end
-    end)
-    
-    UserInputService.InputBegan:Connect(function(input, gameProcessed)
         if gameProcessed then return end
         
         if input.KeyCode == Enum.KeyCode.W then control.forward = 1 end
@@ -671,12 +618,6 @@ function initializeGame()
         if input.KeyCode == Enum.KeyCode.D then control.right = 0 end
         if input.KeyCode == Enum.KeyCode.Space then control.up = 0 end
         if input.KeyCode == Enum.KeyCode.LeftShift then control.down = 0 end
-    end)
-
-    mainFrame:GetPropertyChangedSignal("Visible"):Connect(function()
-        if not mainFrame.Visible and not guiVisible then
-            toggleButton.Visible = true
-        end
     end)
 
     -- ======================== ATUALIZAR VELOCIDADE DE CAMINHADA ========================
@@ -1069,17 +1010,22 @@ function initializeGame()
     RunService.RenderStepped:Connect(function()
         if silentAimActive then
             local closestPlayer = getClosestPlayerInView()
+            
             if closestPlayer then
                 local targetCharacter = closestPlayer.Character
                 if targetCharacter then
                     local targetHumanoid = targetCharacter:FindFirstChild("Humanoid")
                     local targetHead = targetCharacter:FindFirstChild("Head")
+                    
                     if targetHead and targetHumanoid and targetHumanoid.Health > 0 then
                         local currentCameraPos = Camera.CFrame.Position
                         local targetPosition = targetHead.Position
                         local newCFrame = CFrame.new(currentCameraPos, targetPosition)
+                        
                         Camera.CFrame = Camera.CFrame:Lerp(newCFrame, aimSmoothness)
+                        
                         autoShootCooldown = autoShootCooldown - (1/60)
+                        
                         if autoShootCooldown <= 0 then
                             Mouse:LeftDown()
                             task.wait(0.01)
@@ -1095,16 +1041,20 @@ function initializeGame()
     RunService.Heartbeat:Connect(function()
         if autoShootActive and not silentAimActive then
             autoShootCooldown = autoShootCooldown - (1/60)
+            
             if autoShootCooldown <= 0 then
                 local closestPlayer = getClosestPlayerInView()
+                
                 if closestPlayer then
                     local targetCharacter = closestPlayer.Character
                     if targetCharacter then
                         local targetHumanoid = targetCharacter:FindFirstChild("Humanoid")
+                        
                         if targetHumanoid and targetHumanoid.Health > 0 then
                             Mouse:LeftDown()
                             task.wait(0.01)
                             Mouse:LeftUp()
+                            
                             autoShootCooldown = AUTO_SHOOT_RATE
                         end
                     end
